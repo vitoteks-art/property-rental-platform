@@ -54,12 +54,12 @@ export default function RegisterPage() {
       <div className="layout-container flex h-full grow flex-col">
         {/* Top Navigation */}
         <header className="flex items-center justify-between whitespace-nowrap border-b border-solid border-slate-200 dark:border-slate-800 px-6 lg:px-40 py-4 bg-white dark:bg-slate-900">
-          <div className="flex items-center gap-3">
+          <Link to="/" className="flex items-center gap-3">
             <div className="flex items-center justify-center size-8 bg-primary rounded-lg text-white">
               <span className="material-symbols-outlined text-xl">domain</span>
             </div>
             <h2 className="text-slate-900 dark:text-white text-lg font-bold leading-tight tracking-tight">PropTrack</h2>
-          </div>
+          </Link>
           <div className="flex items-center gap-6">
             <span className="hidden md:block text-slate-500 dark:text-slate-400 text-sm font-medium">Already have an account?</span>
             <Link

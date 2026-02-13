@@ -41,12 +41,12 @@ export default function LoginPage() {
     <div className="bg-background-light dark:bg-background-dark min-h-screen flex flex-col font-display">
       {/* Top Navigation */}
       <header className="w-full px-6 lg:px-10 py-4 flex items-center justify-between border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-background-dark">
-        <div className="flex items-center gap-2 text-primary">
+        <Link to="/" className="flex items-center gap-2 text-primary">
           <div className="size-8 bg-primary rounded-lg flex items-center justify-center text-white">
             <span className="material-symbols-outlined text-xl">domain</span>
           </div>
           <h2 className="text-[#0d101b] dark:text-white text-lg font-bold leading-tight tracking-tight">PropManage</h2>
-        </div>
+        </Link>
         <div className="flex items-center gap-4">
           <span className="text-sm text-gray-500 dark:text-gray-400 hidden sm:block">Need help?</span>
           <button
