@@ -140,8 +140,13 @@ REST_FRAMEWORK = {
 
 
 # CORS (dev)
+# CORS (dev)
+# Allow local dev + VPS IP dev server
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:5173",
     "http://127.0.0.1:5173",
+    "http://72.60.215.204:5173",
 ]
+# Optional: if you change dev ports or use a different host, flip this on.
+# CORS_ALLOW_ALL_ORIGINS = True
 CORS_ALLOW_CREDENTIALS = True
