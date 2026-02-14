@@ -18,7 +18,8 @@ export default function AccountProfilePage() {
   const setUser = useAuth((s) => s.setUser);
 
   const [fullName, setFullName] = useState("");
-  const [phone, setPhone] = useState("");
+  const [phoneCountry, setPhoneCountry] = useState<"NG" | "US" | "GB" | "GH">("NG");
+  const [phoneLocal, setPhoneLocal] = useState("");
   const [timezone, setTimezone] = useState("");
   const [bio, setBio] = useState("");
 
@@ -28,10 +29,36 @@ export default function AccountProfilePage() {
 
   const email = user?.email || "";
 
+  const phoneCountries = {
+    NG: { flag: "🇳🇬", code: "+234", name: "Nigeria" },
+    US: { flag: "🇺🇸", code: "+1", name: "United States" },
+    GB: { flag: "🇬🇧", code: "+44", name: "United Kingdom" },
+    GH: { flag: "🇬🇭", code: "+233", name: "Ghana" },
+  } as const;
+
+  function parsePhone(input: string): { country: keyof typeof phoneCountries; local: string } {
+    const s = (input || "").trim();
+    if (!s.startsWith("+")) return { country: "NG", local: s };
+    const match = (Object.keys(phoneCountries) as Array<keyof typeof phoneCountries>).find((k) => s.startsWith(phoneCountries[k].code));
+    if (!match) return { country: "NG", local: s };
+    return { country: match, local: s.slice(phoneCountries[match].code.length).trim() };
+  }
+
+  function formatPhone(country: keyof typeof phoneCountries, local: string): string {
+    const l = (local || "").trim();
+    if (!l) return "";
+    // naive join; we can improve formatting later
+    return `${phoneCountries[country].code} ${l}`.trim();
+  }
+
   useEffect(() => {
     if (!user) return;
     setFullName(combineName(user.first_name || "", user.last_name || ""));
-    setPhone(user.phone || "");
+
+    const parsed = parsePhone(user.phone || "");
+    setPhoneCountry(parsed.country);
+    setPhoneLocal(parsed.local);
+
     setTimezone(user.timezone || "");
     setBio(user.bio || "");
     setDirty(false);
@@ -42,11 +69,11 @@ export default function AccountProfilePage() {
     return {
       first_name: name.first,
       last_name: name.last,
-      phone,
+      phone: formatPhone(phoneCountry, phoneLocal),
       timezone,
       bio,
     };
-  }, [fullName, phone, timezone, bio]);
+  }, [fullName, phoneCountry, phoneLocal, timezone, bio]);
 
   async function save() {
     if (!access) return;
@@ -66,7 +93,9 @@ export default function AccountProfilePage() {
   function discard() {
     if (!user) return;
     setFullName(combineName(user.first_name || "", user.last_name || ""));
-    setPhone(user.phone || "");
+    const parsed = parsePhone(user.phone || "");
+    setPhoneCountry(parsed.country);
+    setPhoneLocal(parsed.local);
     setTimezone(user.timezone || "");
     setBio(user.bio || "");
     setDirty(false);
@@ -216,13 +245,28 @@ export default function AccountProfilePage() {
                     <div className="space-y-2">
                       <label className="text-sm font-semibold text-slate-700 dark:text-slate-300">Phone Number</label>
                       <div className="flex">
-                        <span className="inline-flex items-center px-3 rounded-l-lg border border-r-0 border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-500 text-sm font-medium">+234</span>
+                        <select
+                          className="inline-flex items-center px-3 rounded-l-lg border border-r-0 border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-200 text-sm font-medium focus:ring-2 focus:ring-[#5211d4] focus:border-[#5211d4]"
+                          value={phoneCountry}
+                          onChange={(e) => {
+                            setPhoneCountry(e.target.value as "NG" | "US" | "GB" | "GH");
+                            setDirty(true);
+                          }}
+                          aria-label="Phone country"
+                        >
+                          {(Object.keys(phoneCountries) as Array<keyof typeof phoneCountries>).map((k) => (
+                            <option key={k} value={k}>
+                              {phoneCountries[k].flag} {phoneCountries[k].code}
+                            </option>
+                          ))}
+                        </select>
                         <input
                           className="w-full px-4 py-3 rounded-r-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-[#5211d4] focus:border-[#5211d4] transition-all"
                           type="tel"
-                          value={phone}
+                          placeholder="Phone number"
+                          value={phoneLocal}
                           onChange={(e) => {
-                            setPhone(e.target.value);
+                            setPhoneLocal(e.target.value);
                             setDirty(true);
                           }}
                         />
