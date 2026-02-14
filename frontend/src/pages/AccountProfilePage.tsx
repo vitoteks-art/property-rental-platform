@@ -155,66 +155,13 @@ export default function AccountProfilePage() {
     return <div className="p-6">Loading…</div>;
   }
 
-  // UI/UX adapted from your HTML (Profile Information settings)
+  // Content only — sidebar is provided by AccountLayout
   return (
-    <div className="bg-background-light dark:bg-background-dark font-display text-slate-900 dark:text-slate-100 min-h-screen">
-      <div className="flex h-screen overflow-hidden">
-        {/* Sidebar */}
-        <aside className="w-80 border-r border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hidden lg:flex flex-col">
-          <div className="p-6 flex items-center gap-3">
-            <div className="size-10 bg-[#5211d4] rounded-lg flex items-center justify-center text-white">
-              <span className="material-symbols-outlined">domain</span>
-            </div>
-            <div>
-              <h1 className="text-lg font-bold leading-none">PropManage</h1>
-              <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 font-medium">{user.role} Portal</p>
-            </div>
-          </div>
-
-          <nav className="flex-1 px-4 py-4 space-y-1">
-            <div className="text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider px-3 mb-2">Account Settings</div>
-            <a className="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-[#5211d4]/10 text-[#5211d4] font-semibold" href="#">
-              <span className="material-symbols-outlined text-[22px]">person</span>
-              <span className="text-sm">Profile Information</span>
-            </a>
-            <a className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors" href="#">
-              <span className="material-symbols-outlined text-[22px]">shield_lock</span>
-              <span className="text-sm">Security</span>
-            </a>
-            <a className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors" href="#">
-              <span className="material-symbols-outlined text-[22px]">notifications</span>
-              <span className="text-sm">Notifications</span>
-            </a>
-            <a className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors" href="#">
-              <span className="material-symbols-outlined text-[22px]">credit_card</span>
-              <span className="text-sm">Billing</span>
-            </a>
-
-            <div className="pt-8 text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider px-3 mb-2">Support</div>
-            <a className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors" href="#">
-              <span className="material-symbols-outlined text-[22px]">help</span>
-              <span className="text-sm">Help Center</span>
-            </a>
-          </nav>
-
-          <div className="p-4 border-t border-slate-200 dark:border-slate-800">
-            <div className="flex items-center gap-3 p-2 rounded-lg bg-slate-50 dark:bg-slate-800/50">
-              <div className="size-10 rounded-full bg-slate-300" />
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-semibold truncate">{combineName(user.first_name || "", user.last_name || "") || user.username}</p>
-                <p className="text-xs text-slate-500 truncate">{user.email || ""}</p>
-              </div>
-            </div>
-          </div>
-        </aside>
-
-        {/* Main */}
-        <main className="flex-1 overflow-y-auto bg-background-light dark:bg-background-dark relative">
-          <div className="max-w-4xl mx-auto px-6 py-10 lg:px-12">
-            <header className="mb-10">
-              <h2 className="text-3xl font-black tracking-tight text-slate-900 dark:text-white">Profile Information</h2>
-              <p className="text-slate-500 dark:text-slate-400 mt-2 text-lg">Update your personal details and professional bio used across the platform.</p>
-            </header>
+    <div className="max-w-4xl mx-auto px-6 py-10 lg:px-12">
+      <header className="mb-10">
+        <h2 className="text-3xl font-black tracking-tight text-slate-900 dark:text-white">Profile Information</h2>
+        <p className="text-slate-500 dark:text-slate-400 mt-2 text-lg">Update your personal details and professional bio used across the platform.</p>
+      </header>
 
             <div className="space-y-8 pb-32">
               {error && <div className="rounded-lg border border-red-200 bg-red-50 text-red-700 p-4">{error}</div>}
@@ -432,37 +379,34 @@ export default function AccountProfilePage() {
                 </div>
               </section>
             </div>
-          </div>
 
-          {/* Sticky save bar */}
-          {dirty && (
-            <div className="absolute bottom-0 left-0 right-0 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-t border-slate-200 dark:border-slate-800 p-6 z-10">
-              <div className="max-w-4xl mx-auto flex items-center justify-between">
-                <p className="text-sm text-slate-500 hidden sm:block">You have unsaved changes in your profile.</p>
-                <div className="flex items-center gap-4 w-full sm:w-auto">
-                  <button
-                    type="button"
-                    className="flex-1 sm:flex-none px-6 py-3 text-slate-700 dark:text-slate-300 font-semibold hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors"
-                    onClick={discard}
-                    disabled={saving}
-                  >
-                    Discard
-                  </button>
-                  <button
-                    type="button"
-                    className="flex-1 sm:flex-none px-10 py-3 bg-[#5211d4] text-white font-bold rounded-lg shadow-lg shadow-[#5211d4]/20 hover:bg-[#5211d4]/90 transition-all flex items-center justify-center gap-2 disabled:opacity-60"
-                    onClick={save}
-                    disabled={saving}
-                  >
-                    <span className="material-symbols-outlined text-[20px]">save</span>
-                    {saving ? "Saving…" : "Save Changes"}
-                  </button>
-                </div>
-              </div>
+      {/* Sticky save bar */}
+      {dirty && (
+        <div className="fixed bottom-0 left-0 right-0 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-t border-slate-200 dark:border-slate-800 p-6 z-10">
+          <div className="max-w-4xl mx-auto flex items-center justify-between">
+            <p className="text-sm text-slate-500 hidden sm:block">You have unsaved changes in your profile.</p>
+            <div className="flex items-center gap-4 w-full sm:w-auto">
+              <button
+                type="button"
+                className="flex-1 sm:flex-none px-6 py-3 text-slate-700 dark:text-slate-300 font-semibold hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors"
+                onClick={discard}
+                disabled={saving}
+              >
+                Discard
+              </button>
+              <button
+                type="button"
+                className="flex-1 sm:flex-none px-10 py-3 bg-[#5211d4] text-white font-bold rounded-lg shadow-lg shadow-[#5211d4]/20 hover:bg-[#5211d4]/90 transition-all flex items-center justify-center gap-2 disabled:opacity-60"
+                onClick={save}
+                disabled={saving}
+              >
+                <span className="material-symbols-outlined text-[20px]">save</span>
+                {saving ? "Saving…" : "Save Changes"}
+              </button>
             </div>
-          )}
-        </main>
-      </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
