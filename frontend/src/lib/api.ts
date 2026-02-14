@@ -65,4 +65,14 @@ export const api = {
       headers: { Authorization: `Bearer ${accessToken}` },
       body: JSON.stringify(payload),
     }),
+
+  changePassword: (
+    accessToken: string,
+    payload: { current_password: string; new_password: string }
+  ) =>
+    request<{ detail: string }>(`/api/auth/change-password/`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${accessToken}` },
+      body: JSON.stringify(payload),
+    }),
 };

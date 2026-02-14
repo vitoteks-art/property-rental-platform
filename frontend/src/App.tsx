@@ -3,10 +3,14 @@ import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import AppShell from "./components/AppShell";
 import MarketingLayout from "./layouts/MarketingLayout";
 import AccessDenied from "./pages/AccessDenied";
+import AccountLayout from "./layouts/AccountLayout";
 import DashboardAdmin from "./pages/DashboardAdmin";
 import DashboardLandlord from "./pages/DashboardLandlord";
 import DashboardTenant from "./pages/DashboardTenant";
+import AccountBillingPage from "./pages/AccountBillingPage";
+import AccountNotificationsPage from "./pages/AccountNotificationsPage";
 import AccountProfilePage from "./pages/AccountProfilePage";
+import AccountSecurityPage from "./pages/AccountSecurityPage";
 import HomePage from "./pages/HomePage";
 import LoginPage from "./pages/LoginPage";
 import RegisterPage from "./pages/RegisterPage";
@@ -33,7 +37,16 @@ const router = createBrowserRouter([
         element: <ProtectedRoute />,
         children: [
           // Account settings (all logged-in roles)
-          { path: "/account", element: <AccountProfilePage /> },
+          {
+            path: "/account",
+            element: <AccountLayout />,
+            children: [
+              { index: true, element: <AccountProfilePage /> },
+              { path: "security", element: <AccountSecurityPage /> },
+              { path: "notifications", element: <AccountNotificationsPage /> },
+              { path: "billing", element: <AccountBillingPage /> },
+            ],
+          },
 
           {
             element: <RoleRoute allow={["LANDLORD"]} />,
