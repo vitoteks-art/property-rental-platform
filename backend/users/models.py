@@ -9,18 +9,18 @@ class UserRole(models.TextChoices):
 
 
 class User(AbstractUser):
-    """Custom user with role.
-
-    Week 1 scope:
-    - default role is TENANT (per Victor)
-    - admins can be created via createsuperuser or management commands later
-    """
+    """Custom user with role + profile fields."""
 
     role = models.CharField(
         max_length=20,
         choices=UserRole.choices,
         default=UserRole.TENANT,
     )
+
+    # Profile fields (Week 1.5+)
+    phone = models.CharField(max_length=32, blank=True, default="")
+    timezone = models.CharField(max_length=64, blank=True, default="")
+    bio = models.TextField(blank=True, default="")
 
     def __str__(self) -> str:
         return f"{self.username} ({self.role})"

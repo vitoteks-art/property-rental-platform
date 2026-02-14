@@ -9,6 +9,9 @@ export interface User {
   first_name: string;
   last_name: string;
   role: UserRole;
+  phone?: string;
+  timezone?: string;
+  bio?: string;
 }
 
 export interface AuthResponse {
@@ -51,5 +54,15 @@ export const api = {
     request<User>(`/api/auth/me/`, {
       method: "GET",
       headers: { Authorization: `Bearer ${accessToken}` },
+    }),
+
+  updateMe: (
+    accessToken: string,
+    payload: Partial<Pick<User, "first_name" | "last_name" | "phone" | "timezone" | "bio">>
+  ) =>
+    request<User>(`/api/auth/me/`, {
+      method: "PATCH",
+      headers: { Authorization: `Bearer ${accessToken}` },
+      body: JSON.stringify(payload),
     }),
 };

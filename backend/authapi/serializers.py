@@ -45,4 +45,28 @@ class LoginSerializer(serializers.Serializer):
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ("id", "username", "email", "first_name", "last_name", "role")
+        fields = (
+            "id",
+            "username",
+            "email",
+            "first_name",
+            "last_name",
+            "role",
+            "phone",
+            "timezone",
+            "bio",
+        )
+
+
+class UserUpdateSerializer(serializers.ModelSerializer):
+    """Editable profile fields."""
+
+    class Meta:
+        model = User
+        fields = (
+            "first_name",
+            "last_name",
+            "phone",
+            "timezone",
+            "bio",
+        )

@@ -6,6 +6,7 @@ import AccessDenied from "./pages/AccessDenied";
 import DashboardAdmin from "./pages/DashboardAdmin";
 import DashboardLandlord from "./pages/DashboardLandlord";
 import DashboardTenant from "./pages/DashboardTenant";
+import AccountProfilePage from "./pages/AccountProfilePage";
 import HomePage from "./pages/HomePage";
 import LoginPage from "./pages/LoginPage";
 import RegisterPage from "./pages/RegisterPage";
@@ -31,6 +32,9 @@ const router = createBrowserRouter([
       {
         element: <ProtectedRoute />,
         children: [
+          // Account settings (all logged-in roles)
+          { path: "/account", element: <AccountProfilePage /> },
+
           {
             element: <RoleRoute allow={["LANDLORD"]} />,
             children: [{ path: "/landlord", element: <DashboardLandlord /> }],

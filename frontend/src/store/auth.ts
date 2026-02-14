@@ -19,6 +19,7 @@ interface AuthState {
   }) => Promise<void>;
   login: (payload: { username: string; password: string }) => Promise<void>;
   logout: () => void;
+  setUser: (user: User | null) => void;
 }
 
 function applyAuth(
@@ -61,6 +62,8 @@ export const useAuth = create<AuthState>()(
       },
 
       logout: () => set({ access: null, refresh: null, user: null }),
+
+      setUser: (user) => set({ user }),
     }),
     {
       name: "proptrack-auth",

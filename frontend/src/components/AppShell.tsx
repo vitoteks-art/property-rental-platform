@@ -14,6 +14,12 @@ export default function AppShell() {
             {user ? (
               <>
                 <span className="text-sm text-slate-500">{user.username} · {user.role}</span>
+                <Link
+                  to="/account"
+                  className="h-9 rounded-lg px-4 text-sm font-bold border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 inline-flex items-center"
+                >
+                  Account
+                </Link>
                 <button
                   className="h-9 rounded-lg px-4 text-sm font-bold border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800"
                   onClick={() => {
