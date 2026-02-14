@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { getCountries, getCountryCallingCode } from "libphonenumber-js";
 import { api } from "../lib/api";
 import { useAuth } from "../store/auth";
 
@@ -18,8 +19,10 @@ export default function AccountProfilePage() {
   const setUser = useAuth((s) => s.setUser);
 
   const [fullName, setFullName] = useState("");
-  const [phoneCountry, setPhoneCountry] = useState<"NG" | "US" | "GB" | "GH">("NG");
+  const [phoneCountry, setPhoneCountry] = useState<string>("NG");
   const [phoneLocal, setPhoneLocal] = useState("");
+  const [countryPickerOpen, setCountryPickerOpen] = useState(false);
+  const [countryQuery, setCountryQuery] = useState("");
   const [timezone, setTimezone] = useState("");
   const [bio, setBio] = useState("");
 
@@ -29,27 +32,73 @@ export default function AccountProfilePage() {
 
   const email = user?.email || "";
 
-  const phoneCountries = {
-    NG: { flag: "🇳🇬", code: "+234", name: "Nigeria" },
-    US: { flag: "🇺🇸", code: "+1", name: "United States" },
-    GB: { flag: "🇬🇧", code: "+44", name: "United Kingdom" },
-    GH: { flag: "🇬🇭", code: "+233", name: "Ghana" },
-  } as const;
+  const regionNames = useMemo(() => {
+    try {
+      return new Intl.DisplayNames(["en"], { type: "region" });
+    } catch {
+      return null;
+    }
+  }, []);
 
-  function parsePhone(input: string): { country: keyof typeof phoneCountries; local: string } {
-    const s = (input || "").trim();
-    if (!s.startsWith("+")) return { country: "NG", local: s };
-    const match = (Object.keys(phoneCountries) as Array<keyof typeof phoneCountries>).find((k) => s.startsWith(phoneCountries[k].code));
-    if (!match) return { country: "NG", local: s };
-    return { country: match, local: s.slice(phoneCountries[match].code.length).trim() };
+  function flagEmoji(iso2: string): string {
+    // Convert ISO2 -> regional indicator symbols
+    if (!iso2 || iso2.length !== 2) return "🏳️";
+    const A = 0x1f1e6;
+    const a = "A".charCodeAt(0);
+    const chars = iso2.toUpperCase().split("");
+    return String.fromCodePoint(A + (chars[0].charCodeAt(0) - a), A + (chars[1].charCodeAt(0) - a));
   }
 
-  function formatPhone(country: keyof typeof phoneCountries, local: string): string {
-    const l = (local || "").trim();
-    if (!l) return "";
-    // naive join; we can improve formatting later
-    return `${phoneCountries[country].code} ${l}`.trim();
-  }
+  const allCountries = useMemo(() => {
+    return getCountries().map((iso2) => {
+      const name = regionNames?.of(iso2) || iso2;
+      const calling = `+${getCountryCallingCode(iso2 as Parameters<typeof getCountryCallingCode>[0])}`;
+      return { iso2, name, calling, flag: flagEmoji(iso2) };
+    });
+  }, [regionNames]);
+
+  const filteredCountries = useMemo(() => {
+    const q = countryQuery.trim().toLowerCase();
+    if (!q) return allCountries;
+    return allCountries.filter((c) => {
+      return (
+        c.name.toLowerCase().includes(q) ||
+        c.iso2.toLowerCase().includes(q) ||
+        c.calling.replace("+", "").includes(q.replace("+", ""))
+      );
+    });
+  }, [allCountries, countryQuery]);
+
+  const parsePhone = useMemo(() => {
+    return (input: string): { country: string; local: string } => {
+      const s = (input || "").trim();
+      if (!s.startsWith("+")) return { country: "NG", local: s };
+
+      // Try to match by calling code (longest first)
+      const matches = allCountries
+        .filter((c) => s.startsWith(c.calling))
+        .sort((a, b) => b.calling.length - a.calling.length);
+
+      if (matches.length === 0) return { country: "NG", local: s };
+      const m = matches[0];
+      return { country: m.iso2, local: s.slice(m.calling.length).trim() };
+    };
+  }, [allCountries]);
+
+  const formatPhone = useMemo(() => {
+    return (countryIso2: string, local: string): string => {
+      const l = (local || "").trim();
+      if (!l) return "";
+      const iso2 = (countryIso2 || "NG").toUpperCase();
+      const calling = `+${getCountryCallingCode(iso2 as Parameters<typeof getCountryCallingCode>[0])}`;
+      return `${calling} ${l}`.trim();
+    };
+  }, []);
+
+  const selectedCountry = useMemo(() => {
+    const iso2 = (phoneCountry || "NG").toUpperCase();
+    return allCountries.find((c) => c.iso2 === iso2) || allCountries.find((c) => c.iso2 === "NG");
+  }, [allCountries, phoneCountry]);
 
   useEffect(() => {
     if (!user) return;
@@ -62,7 +111,7 @@ export default function AccountProfilePage() {
     setTimezone(user.timezone || "");
     setBio(user.bio || "");
     setDirty(false);
-  }, [user]);
+  }, [user, parsePhone]);
 
   const current = useMemo(() => {
     const name = splitFullName(fullName);
@@ -73,7 +122,7 @@ export default function AccountProfilePage() {
       timezone,
       bio,
     };
-  }, [fullName, phoneCountry, phoneLocal, timezone, bio]);
+  }, [fullName, phoneCountry, phoneLocal, timezone, bio, formatPhone]);
 
   async function save() {
     if (!access) return;
@@ -245,21 +294,16 @@ export default function AccountProfilePage() {
                     <div className="space-y-2">
                       <label className="text-sm font-semibold text-slate-700 dark:text-slate-300">Phone Number</label>
                       <div className="flex">
-                        <select
-                          className="inline-flex items-center px-3 rounded-l-lg border border-r-0 border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-200 text-sm font-medium focus:ring-2 focus:ring-[#5211d4] focus:border-[#5211d4]"
-                          value={phoneCountry}
-                          onChange={(e) => {
-                            setPhoneCountry(e.target.value as "NG" | "US" | "GB" | "GH");
-                            setDirty(true);
-                          }}
-                          aria-label="Phone country"
+                        <button
+                          type="button"
+                          className="inline-flex items-center gap-2 px-3 rounded-l-lg border border-r-0 border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-200 text-sm font-medium hover:bg-slate-100 dark:hover:bg-slate-700"
+                          onClick={() => setCountryPickerOpen(true)}
+                          aria-label="Choose phone country"
                         >
-                          {(Object.keys(phoneCountries) as Array<keyof typeof phoneCountries>).map((k) => (
-                            <option key={k} value={k}>
-                              {phoneCountries[k].flag} {phoneCountries[k].code}
-                            </option>
-                          ))}
-                        </select>
+                          <span>{selectedCountry?.flag}</span>
+                          <span>{selectedCountry?.calling}</span>
+                          <span className="material-symbols-outlined text-[18px] opacity-70">expand_more</span>
+                        </button>
                         <input
                           className="w-full px-4 py-3 rounded-r-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-[#5211d4] focus:border-[#5211d4] transition-all"
                           type="tel"
@@ -270,6 +314,77 @@ export default function AccountProfilePage() {
                             setDirty(true);
                           }}
                         />
+
+                        {/* Country picker modal */}
+                        {countryPickerOpen && (
+                          <div
+                            className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 p-4"
+                            role="dialog"
+                            aria-modal="true"
+                            onClick={() => setCountryPickerOpen(false)}
+                          >
+                            <div
+                              className="w-full max-w-xl rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl"
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              <div className="p-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
+                                <div>
+                                  <h4 className="font-bold">Select country</h4>
+                                  <p className="text-xs text-slate-500">Search by name, code, or calling code</p>
+                                </div>
+                                <button
+                                  type="button"
+                                  className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800"
+                                  onClick={() => setCountryPickerOpen(false)}
+                                >
+                                  <span className="material-symbols-outlined">close</span>
+                                </button>
+                              </div>
+
+                              <div className="p-4">
+                                <input
+                                  className="w-full rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 px-4 py-3 outline-none focus:ring-2 focus:ring-[#5211d4]/30"
+                                  placeholder="Search…"
+                                  value={countryQuery}
+                                  onChange={(e) => setCountryQuery(e.target.value)}
+                                  autoFocus
+                                />
+
+                                <div className="mt-4 max-h-[420px] overflow-auto divide-y divide-slate-100 dark:divide-slate-800">
+                                  {filteredCountries.slice(0, 300).map((c) => (
+                                    <button
+                                      key={c.iso2}
+                                      type="button"
+                                      className="w-full flex items-center justify-between px-3 py-3 hover:bg-slate-50 dark:hover:bg-slate-800 text-left"
+                                      onClick={() => {
+                                        setPhoneCountry(c.iso2);
+                                        setCountryPickerOpen(false);
+                                        setDirty(true);
+                                      }}
+                                    >
+                                      <div className="flex items-center gap-3">
+                                        <span className="text-lg">{c.flag}</span>
+                                        <div className="flex flex-col">
+                                          <span className="text-sm font-semibold">{c.name}</span>
+                                          <span className="text-xs text-slate-500">{c.iso2}</span>
+                                        </div>
+                                      </div>
+                                      <span className="text-sm font-bold text-slate-600 dark:text-slate-300">{c.calling}</span>
+                                    </button>
+                                  ))}
+
+                                  {filteredCountries.length === 0 && (
+                                    <div className="p-6 text-sm text-slate-500">No results.</div>
+                                  )}
+                                </div>
+
+                                <p className="mt-3 text-[11px] text-slate-400">
+                                  Showing {Math.min(filteredCountries.length, 300)} results (search to narrow down).
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+                        )}
                       </div>
                     </div>
 
